@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-
+import { FaLock, FaLockOpen, FaRegCopy } from "react-icons/fa";
+import Title from "./Title";
 
 export default function PaletteGenerator() {
 const [colors, setColors] = useState(() => {
@@ -11,6 +12,8 @@ return [
 { hex: "#ffe3e0", locked: false },
 ];
 });
+
+const [copiedIndex, setCopiedIndex] = useState(null);
 
 const generateRandomHex = () => {
     const str = "0123456789abcdef";
@@ -41,6 +44,17 @@ const toggleLock = (index) => {
   setColors(newColors);
 };
 
+const copyToClipboard = (text, index) => {
+  navigator.clipboard.writeText(text)
+    .then(() => {
+      setCopiedIndex(index);
+      setTimeout(() => setCopiedIndex(null), 1000); // some depois de 1s
+    })
+    .catch((err) => {
+      console.error("Erro ao copiar:", err);
+    });
+};
+
 useEffect(() => {
   const handleKeyDown = (event) => {
     if (event.code === "Space") {
@@ -58,24 +72,38 @@ useEffect(() => {
 
 return (
   <main className="flex h-screen">
-    {colors.map((color, index) => (
-      <div
-        key={index} // cada bloco precisa de uma chave única
-        className="flex-1 flex flex-col items-center justify-center"
-        style={{ backgroundColor: color.hex }} // cor de fundo
+  <Title />
+  {colors.map((color, index) => (
+    <div
+      key={index}
+      className="relative flex-1 flex flex-col items-center justify-center"
+      style={{ backgroundColor: color.hex }}
+    >
+      <p className="text-white font-mono text-lg">{color.hex}</p>
+      {/* botão de copy */}
+      <button
+        onClick={() => copyToClipboard(color.hex, index)}
+        className="mt-2 px-3 py-1 bg-white text-black rounded cursor-pointer hover:bg-gray-200"
       >
-        {/* mostra o hex da cor */}
-        <p className="text-white font-mono text-lg">{color.hex}</p>
-
-        {/* botão de lock */}
-        <button
-          onClick={() => toggleLock(index)} // chama função passando o índice
-          className="mt-2 px-3 py-1 bg-white text-black rounded"
-        >
-          {color.locked ? "🔒" : "🔓"} {/* muda ícone conforme locked */}
-        </button>
+        <FaRegCopy />
+      </button>
+      {/* botão de lock */}
+      <button
+        onClick={() => toggleLock(index)}
+        className="mt-2 px-3 py-1 bg-white text-black rounded cursor-pointer hover:bg-gray-200"
+      >
+        {color.locked ? <FaLock /> : <FaLockOpen />}
+      </button>
+      {/* popup */}
+      <div
+        className={`absolute top-4 bg-black/80 text-white px-3 py-1 rounded text-sm shadow-lg transition-opacity duration-500 ${
+          copiedIndex === index ? "opacity-100" : "opacity-0"
+        }`}
+      >
+        HEX copiado!
       </div>
-    ))}
-  </main>
+    </div>
+  ))}
+</main>
 );
 }
